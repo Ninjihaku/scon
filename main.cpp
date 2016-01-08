@@ -82,7 +82,8 @@ DWORD WINAPI AGENT(LPVOID pParam)
 	UNREFERENCED_PARAMETER(pParam);
     char bufin[BUFLEN];
     NetworkManager::Initialize();
-	
+	//std::ofstream ms;
+	//ms.open("data.bin", std::ios::binary);
 	//NOTE: ipecho is a external service whose purpose is to tell you the IP address you're using
 	//to connect to the internet. In other words, the IP your ISP assigned to your router or whatever.
 	//This service might not always be available. If that's the case, the command won't work.
@@ -106,6 +107,7 @@ DWORD WINAPI AGENT(LPVOID pParam)
     while(recv(NetworkManager::GetSocket(), bufin, BUFLEN, 0) < 1){}
     
 	//Process the response and store it in the queue
+	//ms << bufin;
     std::string incomming(bufin);
     EnterCriticalSection( &cs_mutex );
     inqueue.push_back(incomming);
@@ -113,6 +115,7 @@ DWORD WINAPI AGENT(LPVOID pParam)
     
 	//Disconnect and terminate the AGENT thread.
     NetworkManager::Disconnect();
+	//ms.close();
 }
 
 
@@ -132,12 +135,10 @@ int main(int args, char** argv)
         {
             std::vector<std::string> procmsg = MessageTrim(Queue_pop_first(inqueue));
 			
-			//This is kind of rough. There is always a line that says 'e' returned from the server, before the IP/HTML/Whatever.
-			//The program expects that, and prints only the next line, which supposedly is the IP address.
-			//I'm assuming this from experimentation. If that was not the case, the command will fail.
-            for(int y = 0; y < procmsg.size(); y++)
-                if(procmsg[y].compare("e") == 0)
-                    std::cout << procmsg[y+1] << std::endl;
+			//Line 12 is the HTML code. The rest is the header.
+            //for(int y = 0; y < procmsg.size(); y++)
+                //if(procmsg[y].compare("e") == 0)
+                    std::cout << procmsg[11] << std::endl;
         }
         CloseHandle(thread);
         return 0;
